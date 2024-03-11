@@ -37,6 +37,6 @@ log = ["dep:log"]
 async = ["async-tokio"]
 async-tokio = ["dep:async-compression", "dep:tokio", "dep:tokio-stream", "dep:tokio-tar"]
 
-download = ["dep:console", "dep:hex", "dep:reqwest", "dep:sha2", "dep:url"]
+download = ["dep:console", "dep:hex", "dep:indicatif", "dep:reqwest", "dep:sha2", "dep:url"]
 archives = ["tar"]
 tar = ["dep:flate2", "dep:tar"]
