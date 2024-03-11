@@ -9,12 +9,18 @@ description = "Provides some simple-to-use wrappers for downloading and managing
 
 [dependencies]
 async-compression = { version = "0.4", features = ["tokio","gzip"], optional = true }
+console = { version = "0.15", optional = true }
 flate2 = { version = "1.0", optional = true }
+hex = { version = "0.4", optional = true }
+indicatif = { version = "0.17", optional = true }
 log = { version = "0.4", optional = true }
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "stream"], optional = true }
+sha2 = { version = "0.10", optional = true }
 tar = { version = "0.4", optional = true }
 tokio = { version = "1.0", default-features = false, features = ["fs"], optional = true }
 tokio-stream = { version = "0.1", optional = true }
 tokio-tar = { version = "0.3", optional = true }
+url = { version = "2.5", optional = true }
 
 
 [dev-dependencies]
@@ -29,8 +35,8 @@ default = ["download"]
 
 log = ["dep:log"]
 async = ["async-tokio"]
-async-tokio = ["dep:async-compression", "dep:tokio", "dep:tokio-tar"]
+async-tokio = ["dep:async-compression", "dep:tokio", "dep:tokio-stream", "dep:tokio-tar"]
 
-download = []
+download = ["dep:console", "dep:hex", "dep:reqwest", "dep:sha2", "dep:url"]
 archives = ["tar"]
 tar = ["dep:flate2", "dep:tar"]
