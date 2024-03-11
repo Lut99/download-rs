@@ -4,7 +4,7 @@
 //  Created:
 //    11 Mar 2024, 15:52:32
 //  Last edited:
-//    11 Mar 2024, 15:54:58
+//    11 Mar 2024, 16:55:32
 //  Auto updated?
 //    Yes
 //
@@ -18,3 +18,5 @@
 pub mod download;
 #[cfg(feature = "tar")]
 pub mod tar;
+#[cfg(test)]
+pub mod tests;

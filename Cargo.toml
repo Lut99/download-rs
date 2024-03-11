@@ -18,6 +18,9 @@ tokio-tar = { version = "0.3", optional = true }
 
 
 [dev-dependencies]
+getrandom = { version = "0.2" }
+tempfile = { version = "3.10" }
+tokio = { version = "1.0", default-features = false, features = ["macros", "rt"] }
 tokio-test = { version = "0.4" }
 
 
