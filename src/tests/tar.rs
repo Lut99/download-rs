@@ -4,7 +4,7 @@
 //  Created:
 //    11 Mar 2024, 16:55:47
 //  Last edited:
-//    11 Mar 2024, 17:03:16
+//    12 Mar 2024, 10:12:58
 //  Auto updated?
 //    Yes
 //
@@ -27,13 +27,14 @@ use crate::tar::*;
 /// # Arguments
 /// - `extra_dirs`: A path to inject between the temporary folder and the source (to test the correct removal of it in the tar)
 /// - `skip_dir`: Whether to skip the root directory or not (see `archive_async`s documentation).
+/// - `use_async`: Whether to run the `*_async` versions of the functions or not.
 ///
 /// # Returns
 /// Nothing, but that means the test succeeded.
 ///
 /// # Panics
 /// This function panics if the test fails, with the reason it fails.
-async fn test_archive_unarchive(extra_dirs: PathBuf, skip_dir: bool) {
+fn test_archive_unarchive(extra_dirs: PathBuf, skip_dir: bool, use_async: bool) {
     /***** PREPARATION *****/
     // Find a temporary folder
     let tempdir: TempDir = match TempDir::new() {
@@ -474,16 +475,37 @@ async fn test_archive_unarchive(extra_dirs: PathBuf, skip_dir: bool) {
 
 
     /***** ARCHIVING *****/
-    // Archive the thing to the temporary folder
     let tar_path: PathBuf = tempdir.path().join("source.tar.gz");
-    if let Err(err) = archive_async(&source, &tar_path, skip_dir).await {
-        panic!("Failed to archive the source: {}", err);
-    }
-
-    // Unarchive the thing to the temporary folder again, this time named differently
     let target: PathBuf = tempdir.path().join("src_unarchived");
-    if let Err(err) = unarchive_async(&tar_path, &target).await {
-        panic!("Failed to unarchive the tarball: {}", err);
+    #[allow(unused_mut)]
+    let mut run_sync: bool = true;
+    #[cfg(feature = "async-tokio")]
+    tokio_test::block_on(async {
+        if use_async {
+            // Archive the thing to the temporary folder
+            if let Err(err) = archive_async(&source, &tar_path, skip_dir).await {
+                panic!("Failed to archive the source: {}", err);
+            }
+
+            // Unarchive the thing to the temporary folder again, this time named differently
+            if let Err(err) = unarchive_async(&tar_path, &target).await {
+                panic!("Failed to unarchive the tarball: {}", err);
+            }
+
+            // Don't forget to _not_ run the sync version
+            run_sync = false;
+        }
+    });
+    if run_sync {
+        // Archive the thing to the temporary folder
+        if let Err(err) = archive(&source, &tar_path, skip_dir) {
+            panic!("Failed to archive the source: {}", err);
+        }
+
+        // Unarchive the thing to the temporary folder again, this time named differently
+        if let Err(err) = unarchive(&tar_path, &target) {
+            panic!("Failed to unarchive the tarball: {}", err);
+        }
     }
 
 
@@ -593,17 +615,39 @@ async fn test_archive_unarchive(extra_dirs: PathBuf, skip_dir: bool) {
 
 
 /// Test if archiving / unarchiving works, keeping the root folder intact.
-#[tokio::test]
-async fn test_tarball_with_root() { test_archive_unarchive(PathBuf::new(), false).await; }
+#[test]
+fn test_tarball_with_root() { test_archive_unarchive(PathBuf::new(), false, false); }
 
 /// Test if archiving / unarchiving works, skipping the root folder in the result.
-#[tokio::test]
-async fn test_tarball_without_root() { test_archive_unarchive(PathBuf::new(), true).await; }
+#[test]
+fn test_tarball_without_root() { test_archive_unarchive(PathBuf::new(), true, false); }
 
 /// Test if archiving / unarchiving works, keeping the root folder intact _and_ having a folder that is far away to test removing the intermediate directories.
-#[tokio::test]
-async fn test_tarball_with_root_extra_path() { test_archive_unarchive("some/extra/folders/lol".into(), false).await; }
+#[test]
+fn test_tarball_with_root_extra_path() { test_archive_unarchive("some/extra/folders/lol".into(), false, false); }
 
 /// Test if archiving / unarchiving works, skipping the root folder in the result _and_ having a folder that is far away to test removing the intermediate directories.
-#[tokio::test]
-async fn test_tarball_without_root_extra_path() { test_archive_unarchive("some/extra/folders/lol".into(), true).await; }
+#[test]
+fn test_tarball_without_root_extra_path() { test_archive_unarchive("some/extra/folders/lol".into(), true, false); }
+
+
+
+/// Test if async archiving / unarchiving works, keeping the root folder intact.
+#[cfg(feature = "async-tokio")]
+#[test]
+fn test_tarball_with_root_async() { test_archive_unarchive(PathBuf::new(), false, true); }
+
+/// Test if async archiving / unarchiving works, skipping the root folder in the result.
+#[cfg(feature = "async-tokio")]
+#[test]
+fn test_tarball_without_root_async() { test_archive_unarchive(PathBuf::new(), true, true); }
+
+/// Test if async archiving / unarchiving works, keeping the root folder intact _and_ having a folder that is far away to test removing the intermediate directories.
+#[cfg(feature = "async-tokio")]
+#[test]
+fn test_tarball_with_root_extra_path_async() { test_archive_unarchive("some/extra/folders/lol".into(), false, true); }
+
+/// Test if async archiving / unarchiving works, skipping the root folder in the result _and_ having a folder that is far away to test removing the intermediate directories.
+#[cfg(feature = "async-tokio")]
+#[test]
+fn test_tarball_without_root_extra_path_async() { test_archive_unarchive("some/extra/folders/lol".into(), true, true); }

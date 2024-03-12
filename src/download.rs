@@ -4,7 +4,7 @@
 //  Created:
 //    11 Mar 2024, 15:53:15
 //  Last edited:
-//    11 Mar 2024, 17:55:36
+//    12 Mar 2024, 10:30:51
 //  Auto updated?
 //    Yes
 //
@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr as _;
 use std::{error, fs};
 
-use console::Style;
+pub use console::Style;
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::blocking::{Client, Request, Response};
 use reqwest::StatusCode;
@@ -155,6 +155,53 @@ impl<'c> DownloadSecurity<'c> {
     ///
     /// # Returns
     /// A new DownloadSecurity instance that will make your downloaded file so secure you can use it to store a country's deficit (not legal advice).
+    ///
+    /// # Example
+    /// ```rust
+    /// use download::{download_file, DownloadSecurity};
+    /// use hex_literal::hex;
+    ///
+    /// // Download some file
+    /// let url = "https://raw.githubusercontent.com/Lut99/download-rs/main/LICENSE";
+    /// let file = std::env::temp_dir().join("index.html");
+    /// download_file(
+    ///     &url,
+    ///     &file,
+    ///     DownloadSecurity::all(&hex!(
+    ///         "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    ///     )),
+    ///     None,
+    /// )
+    /// .unwrap();
+    ///
+    /// // It exists now!
+    /// assert!(file.is_file());
+    /// assert!(std::fs::read_to_string(&file).is_ok());
+    /// ```
+    /// ```rust
+    /// use download::{download_file, DownloadSecurity, Error};
+    /// use hex_literal::hex;
+    ///
+    /// // Using a non-HTTPS URL
+    /// let url = "http://raw.githubusercontent.com/Lut99/download-rs/main/LICENSE";
+    /// let file = std::env::temp_dir().join("index.html");
+    /// match download_file(&url, &file, DownloadSecurity::all(&hex!("deadbeef")), None) {
+    ///     Err(Error::SecurityNoHttps { .. }) => println!("Yeah that failed"),
+    /// #   got => panic!("Did not crash as expected, got {got:?}"),
+    /// }
+    /// ```
+    /// ```rust
+    /// use download::{download_file, DownloadSecurity, Error};
+    /// use hex_literal::hex;
+    ///
+    /// // Using the wrong checksum!
+    /// let url = "https://raw.githubusercontent.com/Lut99/download-rs/main/LICENSE";
+    /// let file = std::env::temp_dir().join("index.html");
+    /// match download_file(&url, &file, DownloadSecurity::all(&hex!("deadbeef")), None) {
+    ///     Err(Error::SecurityChecksum { .. }) => println!("Yeah that failed"),
+    /// #   got => panic!("Did not crash as expected, got {got:?}"),
+    /// }
+    /// ```
     #[inline]
     pub fn all(checkum: &'c [u8]) -> Self { Self { checksum: Some(checkum), https: true } }
 
@@ -169,6 +216,41 @@ impl<'c> DownloadSecurity<'c> {
     ///
     /// # Returns
     /// A new DownloadSecurity instance that will make sure your file has the given checksum before returning.
+    ///
+    /// # Example
+    /// ```rust
+    /// use download::{download_file, DownloadSecurity};
+    /// use hex_literal::hex;
+    ///
+    /// // Download some file
+    /// let url = "https://raw.githubusercontent.com/Lut99/download-rs/main/LICENSE";
+    /// let file = std::env::temp_dir().join("index.html");
+    /// download_file(
+    ///     &url,
+    ///     &file,
+    ///     DownloadSecurity::checksum(&hex!(
+    ///         "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    ///     )),
+    ///     None,
+    /// )
+    /// .unwrap();
+    ///
+    /// // It exists now!
+    /// assert!(file.is_file());
+    /// assert!(std::fs::read_to_string(&file).is_ok());
+    /// ```
+    /// ```rust
+    /// use download::{download_file, DownloadSecurity, Error};
+    /// use hex_literal::hex;
+    ///
+    /// // Using the wrong checksum!
+    /// let url = "https://raw.githubusercontent.com/Lut99/download-rs/main/LICENSE";
+    /// let file = std::env::temp_dir().join("index.html");
+    /// match download_file(&url, &file, DownloadSecurity::checksum(&hex!("deadbeef")), None) {
+    ///     Err(Error::SecurityChecksum { .. }) => println!("Yeah that failed"),
+    /// #   got => panic!("Did not crash as expected, got {got:?}"),
+    /// }
+    /// ```
     #[inline]
     pub fn checksum(checkum: &'c [u8]) -> Self { Self { checksum: Some(checkum), https: false } }
 
@@ -178,6 +260,31 @@ impl<'c> DownloadSecurity<'c> {
     ///
     /// # Returns
     /// A new DownloadSecurity instance that will make sure your file if downloaded over HTTPS only.
+    ///
+    /// # Example
+    /// ```rust
+    /// use download::{download_file, DownloadSecurity};
+    ///
+    /// // Download some file
+    /// let url = "https://raw.githubusercontent.com/Lut99/download-rs/main/LICENSE";
+    /// let file = std::env::temp_dir().join("index.html");
+    /// download_file(&url, &file, DownloadSecurity::https(), None).unwrap();
+    ///
+    /// // It exists now!
+    /// assert!(file.is_file());
+    /// assert!(std::fs::read_to_string(&file).is_ok());
+    /// ```
+    /// ```rust
+    /// use download::{download_file, DownloadSecurity, Error};
+    ///
+    /// // Using a non-HTTPS URL
+    /// let url = "http://raw.githubusercontent.com/Lut99/download-rs/main/LICENSE";
+    /// let file = std::env::temp_dir().join("index.html");
+    /// match download_file(&url, &file, DownloadSecurity::https(), None) {
+    ///     Err(Error::SecurityNoHttps { .. }) => println!("Yeah that failed"),
+    /// #   got => panic!("Did not crash as expected, got {got:?}"),
+    /// }
+    /// ```
     #[inline]
     pub fn https() -> Self { Self { checksum: None, https: true } }
 
@@ -187,6 +294,20 @@ impl<'c> DownloadSecurity<'c> {
     ///
     /// # Returns
     /// A new DownloadSecurity instance that will require no additional security measures on the downloaded file.
+    ///
+    /// # Example
+    /// ```rust
+    /// use download::{download_file, DownloadSecurity};
+    ///
+    /// // Download some file
+    /// let url = "https://raw.githubusercontent.com/Lut99/download-rs/main/LICENSE";
+    /// let file = std::env::temp_dir().join("index.html");
+    /// download_file(&url, &file, DownloadSecurity::none(), None).unwrap();
+    ///
+    /// // It exists now!
+    /// assert!(file.is_file());
+    /// assert!(std::fs::read_to_string(&file).is_ok());
+    /// ```
     #[inline]
     pub fn none() -> Self { Self { checksum: None, https: false } }
 }
@@ -233,7 +354,7 @@ impl<'c> Display for DownloadSecurity<'c> {
 /// use download::{download_file, DownloadSecurity};
 ///
 /// // Download some file
-/// let url = "https://theuselessweb.com/index.html";
+/// let url = "http://theuselessweb.com/index.html";
 /// let file = std::env::temp_dir().join("index.html");
 /// download_file(&url, &file, DownloadSecurity::none(), None).unwrap();
 ///
@@ -424,6 +545,22 @@ pub fn download_file(source: impl AsRef<str>, target: impl AsRef<Path>, security
 ///
 /// # Errors
 /// This function may error if we failed to download the file or write it (which may happen if the parent directory of `local` does not exist, among other things).
+///
+/// # Example
+/// ```rust
+/// # tokio_test::block_on(async {
+/// use download::{download_file_async, DownloadSecurity};
+///
+/// // Download some file
+/// let url = "https://theuselessweb.com/index.html";
+/// let file = std::env::temp_dir().join("index.html");
+/// download_file_async(&url, &file, DownloadSecurity::none(), None).await.unwrap();
+///
+/// // It exists now!
+/// assert!(file.is_file());
+/// assert!(tokio::fs::read_to_string(&file).await.is_ok());
+/// # });
+/// ```
 #[cfg(feature = "async-tokio")]
 pub async fn download_file_async(
     source: impl AsRef<str>,

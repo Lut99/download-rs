@@ -4,7 +4,7 @@
 //  Created:
 //    11 Mar 2024, 15:53:35
 //  Last edited:
-//    11 Mar 2024, 16:51:58
+//    12 Mar 2024, 10:15:30
 //  Auto updated?
 //    Yes
 //
@@ -20,7 +20,6 @@ use std::{error, fs, io};
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use log::debug;
 use tar::{Archive, Builder, Entries, Entry};
 #[cfg(feature = "async-tokio")]
 use ::{
@@ -168,7 +167,7 @@ impl error::Error for Error {
 /// // Write a test directory
 /// let tmp = std::env::temp_dir();
 /// let dir = tmp.join("example");
-/// # std::fs::remove_dir_all(&dir).unwrap();
+/// # if dir.exists() { std::fs::remove_dir_all(&dir).unwrap(); }
 /// std::fs::create_dir(&dir).unwrap();
 /// std::fs::write(dir.join("file1.txt"), "Hello there!\n").unwrap();
 /// std::fs::write(dir.join("file2.txt"), "General Kenobi...\n").unwrap();
@@ -176,7 +175,7 @@ impl error::Error for Error {
 ///
 /// // We can archive them!
 /// let tar = tmp.join("example.tar.gz");
-/// # std::fs::remove_file(&tar).unwrap();
+/// # if tar.exists() { std::fs::remove_file(&tar).unwrap(); }
 /// archive(&dir, &tar, false).unwrap();
 ///
 /// assert!(tar.is_file());
@@ -270,7 +269,7 @@ pub fn archive(source: impl AsRef<Path>, tarball: impl AsRef<Path>, skip_root_di
 /// // Write a test directory
 /// let tmp = std::env::temp_dir();
 /// let dir = tmp.join("example");
-/// # tokio::fs::remove_dir_all(&dir).await.unwrap();
+/// # if dir.exists() { tokio::fs::remove_dir_all(&dir).await.unwrap(); }
 /// tokio::fs::create_dir(&dir).await.unwrap();
 /// tokio::fs::write(dir.join("file1.txt"), "Hello there!\n").await.unwrap();
 /// tokio::fs::write(dir.join("file2.txt"), "General Kenobi...\n").await.unwrap();
@@ -278,7 +277,7 @@ pub fn archive(source: impl AsRef<Path>, tarball: impl AsRef<Path>, skip_root_di
 ///
 /// // We can archive them!
 /// let tar = tmp.join("example.tar.gz");
-/// # tokio::fs::remove_file(&tar).await.unwrap();
+/// # if tar.exists() { tokio::fs::remove_file(&tar).await.unwrap(); }
 /// archive_async(&dir, &tar, false).await.unwrap();
 ///
 /// assert!(tar.is_file());
@@ -384,18 +383,18 @@ pub async fn archive_async(source: impl AsRef<Path>, tarball: impl AsRef<Path>, 
 /// // Create an archive (see 'archive()' example)
 /// # let tmp = std::env::temp_dir();
 /// # let dir = tmp.join("example");
-/// # std::fs::remove_dir_all(&dir).unwrap();
+/// # if dir.exists() { std::fs::remove_dir_all(&dir).unwrap(); }
 /// # std::fs::create_dir(&dir).unwrap();
 /// # std::fs::write(dir.join("file1.txt"), "Hello there!\n").unwrap();
 /// # std::fs::write(dir.join("file2.txt"), "General Kenobi...\n").unwrap();
 /// # std::fs::write(dir.join("file3.txt"), "...you are a bold one\n").unwrap();
 /// # let tar = tmp.join("example.tar.gz");
-/// # std::fs::remove_file(&tar).unwrap();
+/// # if tar.exists() { std::fs::remove_file(&tar).unwrap(); }
 /// # download::tar::archive(&dir, &tar, false).unwrap();
 ///
 /// // Unarchive it to another directory!
 /// let out = tmp.join("example2");
-/// # std::fs::remove_dir_all(&out).unwrap();
+/// # if out.exists() { std::fs::remove_dir_all(&out).unwrap(); }
 /// unarchive(&tar, &out).unwrap();
 ///
 /// // Now check the directory contains what we expect :)
@@ -498,18 +497,18 @@ pub fn unarchive(tarball: impl AsRef<Path>, target: impl AsRef<Path>) -> Result<
 /// // Create an archive (see 'archive()' example)
 /// # let tmp = std::env::temp_dir();
 /// # let dir = tmp.join("example");
-/// # tokio::fs::remove_dir_all(&dir).await.unwrap();
+/// # if dir.exists() { tokio::fs::remove_dir_all(&dir).await.unwrap(); }
 /// # tokio::fs::create_dir(&dir).await.unwrap();
 /// # tokio::fs::write(dir.join("file1.txt"), "Hello there!\n").await.unwrap();
 /// # tokio::fs::write(dir.join("file2.txt"), "General Kenobi...\n").await.unwrap();
 /// # tokio::fs::write(dir.join("file3.txt"), "...you are a bold one\n").await.unwrap();
 /// # let tar = tmp.join("example.tar.gz");
-/// # tokio::fs::remove_file(&tar).await.unwrap();
+/// # if tar.exists() { tokio::fs::remove_file(&tar).await.unwrap(); }
 /// # download::tar::archive_async(&dir, &tar, false).await.unwrap();
 ///
 /// // Unarchive it to another directory!
 /// let out = tmp.join("example2");
-/// # tokio::fs::remove_dir_all(&out).await.unwrap();
+/// # if out.exists() { tokio::fs::remove_dir_all(&out).await.unwrap(); }
 /// unarchive_async(&tar, &out).await.unwrap();
 ///
 /// // Now check the directory contains what we expect :)
