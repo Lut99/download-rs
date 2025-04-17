@@ -16,7 +16,7 @@ download = { git = "https://github.com/Lut99/download-rs" }
 You can optionally fix yourself to a particular tag, e.g.,
 ```toml
 [dependencies]
-download = { git = "https://github.com/Lut99/download-rs", tag = "v0.1.0" }
+download = { git = "https://github.com/Lut99/download-rs", tag = "v1.0.0" }
 ```
 
 To enable additional features (see [below](#features)), you can combine the above with the `features`-flag.
@@ -41,6 +41,18 @@ This crate supports the following features:
 - _Aliases_
     - `async`: Enables the "default" backend (`async-tokio`).
     - `archives`: Enables the `tar`-feature.
+- _reqwest_ (see <https://docs.rs/reqwest/latest/reqwest/#optional-features> for their meaning)
+    - `native-tls`
+    - `native-tls-alpn`
+    - `native-tls-vendored`
+    - `rustls-tls`
+    - `rustls-tls-no-provider`
+    - `rustls-tls-manual-roots-no-provider`
+    - `rustls-tls-webpki-roots-no-provider`
+    - `rustls-tls-native-roots-no-provider`
+    - `rustls-tls-manual-roots`
+    - `rustls-tls-webpki-roots`
+    - `rustls-tls-native-roots`
 
 
 ## Changelog

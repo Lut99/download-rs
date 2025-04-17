@@ -4,7 +4,7 @@
 //  Created:
 //    11 Mar 2024, 16:55:47
 //  Last edited:
-//    12 Mar 2024, 10:12:58
+//    17 Apr 2025, 10:31:06
 //  Auto updated?
 //    Yes
 //
@@ -16,7 +16,7 @@ use std::fs;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 
-use getrandom::getrandom;
+use rand::RngCore as _;
 use tempfile::TempDir;
 
 use crate::tar::*;
@@ -414,13 +414,9 @@ fn test_archive_unarchive(extra_dirs: PathBuf, skip_dir: bool, use_async: bool) 
          right. Take ten, everybody. Wrap it up, guys. I had virtually no rehearsal for that."
     };
     let file2: Vec<u8> = {
-        let mut res: Vec<u8> = Vec::with_capacity(4096);
-        match getrandom(&mut res) {
-            Ok(_) => res,
-            Err(err) => {
-                panic!("Failed to genereate random test bytestring: {}", err);
-            },
-        }
+        let mut res: Vec<u8> = vec![0; 4096];
+        rand::rng().fill_bytes(&mut res);
+        res
     };
     let file3: &'static str = {
         "Did you ever hear the tragedy of Darth Plagueis The Wise? I thought not. It’s not a story the Jedi would tell you. It’s a Sith legend. \
